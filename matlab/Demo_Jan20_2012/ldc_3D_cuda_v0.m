@@ -56,8 +56,8 @@ Ld = 1; Td = 1; Ud = (To/Lo)*Uavg;
 nu_d = 1/Re;
 
 % convert to LBM units
-dt = 5e-4;
-Ny_divs = 32;
+dt = 1e-4;
+Ny_divs = 96;
 dx = 1/(Ny_divs-1);
 u_lbm = (dt/dx)*Ud;
 nu_lbm=(dt/(dx^2))*nu_d;
@@ -183,7 +183,7 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     fprintf('Ok! Cross your fingers!! \n');
     
     % commence time stepping
-   profile on
+   %profile on
     tic;
     
     fIn = gpuArray(fIn);
@@ -199,6 +199,7 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     uz_p_lid = gpuArray(uz_p_lid);
     w = gpuArray(w);
     omega = gpuArray(omega);
+    streamTgtMat = gpuArray(streamTgtMat);
     
     % transfer data to the GPU
     for ts = 1:Num_ts
@@ -338,7 +339,7 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     
     fprintf('Lattice-point updates per second = %g.\n',...
         Num_ts*nnodes/ex_time);
-    profile viewer
+   % profile viewer
     
     
     
