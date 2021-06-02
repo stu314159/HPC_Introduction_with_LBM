@@ -41,6 +41,11 @@ ind = (1:N)';
 x_m = circshift(ind,1);
 x_p = circshift(ind,-1);
 
+x_m = gpuArray(x_m);
+x_p = gpuArray(x_p);
+f_tmp = gpuArray(f_tmp);
+f = gpuArray(f);
+profile on
 for ts = 1:Num_ts
     
     if(mod(ts,100)==0)
@@ -64,7 +69,7 @@ for ts = 1:Num_ts
 end
 
 ex_time = toc;
-
+profile viewer
 plot(x_space,f,'-b');
 axis([x_left x_right 0 1.1*f_l]);
 title('\bf{Final Condition}');
