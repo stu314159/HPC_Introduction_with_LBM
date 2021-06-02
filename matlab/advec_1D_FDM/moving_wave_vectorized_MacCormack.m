@@ -3,10 +3,10 @@
 clear
 close('all')
 
-N = 5000;
+N = 50000;
 u = 1;
 
-plot_freq = 10;
+plot_freq = 2500;
 plot_switch = 1;
 x_left = -10;
 x_right = 10;

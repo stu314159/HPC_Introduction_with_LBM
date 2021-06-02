@@ -1,7 +1,6 @@
-% moving_wave_vectorized_lax.m
+% moving_wave_vectorized_MacCormack.m
 
 clear
-%clc
 close('all')
 
 N = 50000;
@@ -27,12 +26,19 @@ f_l = 1;
 f = f_l*exp(-(x_space.*x_space));
 f((x_space < -5) & (x_space > -7)) = 1;
 
+f_tmp1 = zeros(N,1);
 f_tmp = zeros(N,1);
+
+
+
+
 
 % plot initial condition
 plot(x_space,f,'-b');
 axis([x_left x_right 0 1.1*f_l]);
-title('\bf{Initial Condition}');
+grid on
+
+%title('\bf{Initial Condition}');
 drawnow
 
 tic;
@@ -41,7 +47,19 @@ ind = (1:N)';
 x_m = circshift(ind,1);
 x_p = circshift(ind,-1);
 
+x_m = gpuArray(x_m);
+x_p = gpuArray(x_p);
+f_tmp = gpuArray(f_tmp);
+f = gpuArray(f);
+%f_tmp1 = gpuArray(f_tmp1);
 
+% construct my cuda kernel
+k = parallel.gpu.CUDAKernel('maccormack_update.ptx','maccormack_update.cu');
+% k takes arguments: f_out, f, u, dx, dt, N
+TPB = 32*4;
+k.ThreadBlockSize = [TPB,1,1];
+k.GridSize = [ceil(N/TPB),1,1];
+N = int32(N);
 
 for ts = 1:Num_ts
     
@@ -49,7 +67,9 @@ for ts = 1:Num_ts
        fprintf('Executing time step number %d.\n',ts);
     end
     
-    f_tmp = 0.5.*(f(x_p)+f(x_m))-(u*dt/(2*dx)).*(f(x_p)-f(x_m));
+    %f_tmp1 = f - (u*dt/dx).*(f(x_p)-f);
+    %f_tmp = 0.5*(f + f_tmp1 - (u*dt/dx).*(f_tmp1 - f_tmp1(x_m)));
+    f_tmp = feval(k,f_tmp,f,u,dx,dt,N);
     
     f = f_tmp;
     
@@ -57,8 +77,9 @@ for ts = 1:Num_ts
         if(mod(ts,plot_freq)==0)
             plot(x_space,f,'-b')
             axis([x_left x_right 0 1.1*f_l]);
-            title('\bf{Lax Method}','FontSize',12);
             grid on
+            title('\bf{MacCormack Method}','FontSize',12);
+            
             drawnow
         end
     end
