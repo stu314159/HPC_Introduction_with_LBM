@@ -170,6 +170,12 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     k_velBC.ThreadBlockSize = [TPB,1,1];
     k_velBC.GridSize = [ceil(N_lnl/TPB),1,1];
     
+    k_stream = parallel.gpu.CUDAKernel('streamD2Q9.ptx',...
+        'streamD2Q9.cu');
+    TPB = 128;
+    k_stream.ThreadBlockSize = [TPB,1,1];
+    k_stream.GridSize = [ceil(nnodes/TPB),1,1];
+    
     profile on
     
     for ts = 1:Num_ts
@@ -217,10 +223,10 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         
         % stream
         %fIn(stream_tgt)=fOut(:);
-        for i = 1:numSpd
-            fIn(stm(:,i),i)=fOut(:,i);
-        end
-        
+%         for i = 1:numSpd
+%             fIn(stm(:,i),i)=fOut(:,i);
+%         end
+        fIn = feval(k_stream,fIn,fOut,stm,nnodes);
         
         
         if(mod(ts,plot_freq)==0)
