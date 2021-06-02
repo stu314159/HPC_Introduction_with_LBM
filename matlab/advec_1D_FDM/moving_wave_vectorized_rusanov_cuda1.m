@@ -29,6 +29,7 @@ f((x_space < -5) & (x_space > -7)) = 1;
 
 
 f_tmp = zeros(N,1);
+f_nm = zeros(N,1);
 
 
 
@@ -49,6 +50,15 @@ x_p = circshift(ind,-1);
 x_2m = circshift(ind,2);
 x_2p = circshift(ind,-2);
 
+
+x_m = gpuArray(x_m);
+x_p = gpuArray(x_p);
+x_2m = gpuArray(x_2m);
+x_2p = gpuArray(x_2p);
+
+f_nm = gpuArray(f_nm);
+f_tmp = gpuArray(f_tmp);
+f = gpuArray(f);
 
 for ts = 1:Num_ts
     
