@@ -25,7 +25,7 @@
 )
 {
 	.reg .pred 	%p<2>;
-	.reg .b32 	%r<10>;
+	.reg .b32 	%r<11>;
 	.reg .f64 	%fd<58>;
 	.reg .b64 	%rd<34>;
 
@@ -55,8 +55,9 @@
 	mul.wide.s32 	%rd14, %r1, 8;
 	add.s64 	%rd15, %rd13, %rd14;
 	ld.global.u32 	%r7, [%rd12];
+	add.s32 	%r8, %r7, -1;
 	cvta.to.global.u64 	%rd16, %rd2;
-	mul.wide.s32 	%rd17, %r7, 8;
+	mul.wide.s32 	%rd17, %r8, 8;
 	add.s64 	%rd18, %rd16, %rd17;
 	ld.global.f64 	%fd1, [%rd18];
 	ld.global.f64 	%fd2, [%rd15];
@@ -74,8 +75,8 @@
 	mul.f64 	%fd9, %fd8, 0d4008000000000000;
 	ld.global.f64 	%fd10, [%rd23];
 	mul.f64 	%fd11, %fd10, 0d3FBC71C71C71C71C;
-	add.s32 	%r8, %r7, %r2;
-	mul.wide.s32 	%rd24, %r8, 8;
+	add.s32 	%r9, %r8, %r2;
+	mul.wide.s32 	%rd24, %r9, 8;
 	add.s64 	%rd25, %rd8, %rd24;
 	ld.global.f64 	%fd12, [%rd25];
 	fma.rn.f64 	%fd13, %fd11, %fd9, %fd12;
@@ -85,8 +86,8 @@
 	mul.f64 	%fd16, %fd15, 0d4008000000000000;
 	ld.global.f64 	%fd17, [%rd23];
 	mul.f64 	%fd18, %fd17, 0d3FBC71C71C71C71C;
-	shl.b32 	%r9, %r2, 3;
-	cvt.s64.s32 	%rd26, %r9;
+	shl.b32 	%r10, %r2, 3;
+	cvt.s64.s32 	%rd26, %r10;
 	add.s64 	%rd27, %rd25, %rd26;
 	ld.global.f64 	%fd19, [%rd27];
 	fma.rn.f64 	%fd20, %fd18, %fd16, %fd19;

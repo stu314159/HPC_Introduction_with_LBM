@@ -211,11 +211,13 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         fIn = feval(k_velBC,fIn,ux,uy,rho,ux_p,uy_p,lnl,N_lnl,nnodes);
         
         % compute equilibrium
-        for i = 1:numSpd
-            cu = 3*(ex(i)*ux+ey(i)*uy);
-            fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
-                (3/2)*(ux.^2 + uy.^2 ));
-        end
+%         for i = 1:numSpd
+%             cu = 3*(ex(i)*ux+ey(i)*uy);
+%             fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
+%                 (3/2)*(ux.^2 + uy.^2 ));
+%         end
+%         
+        fEq = feval(k_eq,fEq,ux,uy,rho,nnodes);
         
         % Collide
         fOut= fIn - (fIn - fEq)*omega_op;
