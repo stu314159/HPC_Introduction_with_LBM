@@ -4,14 +4,17 @@ clear
 clc
 close('all');
 
+% decide whether or not to save output to compare with accelerated results
+make_gold_standard = 0;
+
 dynamics = 1;
 % 1 = LBGK
 % 2 = TRT 
 % 3 = MRT
 
-Num_ts = 20000;
-ts_rep_freq = 1000;
-plot_freq = 10000;
+Num_ts = 2000;
+ts_rep_freq = 500;
+plot_freq = 1000;
 
 Lx_p = 1;
 Ly_p = 1;
@@ -31,8 +34,8 @@ Ld = 1; Td = 1; Ud = (To/Lo)*Uavg;
 nu_d = 1/Re;
 
 % convert to LBM units
-dt = 0.0008974;
-Ny_divs = 101;
+dt = 0.0002;
+Ny_divs = 201;
 dx = 1/(Ny_divs-1);
 u_lbm = (dt/dx)*Ud;
 nu_lbm=(dt/(dx^2))*nu_d;
@@ -233,6 +236,11 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     ex_time = toc;
     fprintf('Lattice-point updates per second = %g.\n',nnodes*Num_ts/ex_time);
     
+    if make_gold_standard == 1
+       save('gold_standard.mat','fIn'); 
+    end
+    
+    fprintf('Validation check, error = %g \n',validate(fIn)); % should be zero
     
 else
     fprintf('Run aborted.  Better luck next time!\n');

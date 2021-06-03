@@ -31,8 +31,8 @@ Ld = 1; Td = 1; Ud = (To/Lo)*Uavg;
 nu_d = 1/Re;
 
 % convert to LBM units
-dt = 0.0008974;
-Ny_divs = 101;
+dt = 0.0002;
+Ny_divs = 201;
 dx = 1/(Ny_divs-1);
 u_lbm = (dt/dx)*Ud;
 nu_lbm=(dt/(dx^2))*nu_d;
@@ -246,6 +246,9 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     end
     ex_time = toc;
     fprintf('Lattice-point updates per second = %g.\n',nnodes*Num_ts/ex_time);
+    
+    
+    fprintf('Validation check, error = %g \n',validate(fIn));
     profile viewer
     
 else
