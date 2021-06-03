@@ -186,17 +186,21 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         ux = (fIn*ex')./rho;
         uy = (fIn*ey')./rho;
         
+        
+        % set microscopic BC
+        %fIn(lnl,:)=velocityBC_D2Q9(fIn(lnl,:),w,ex,ey,ux_p,uy_p);
+        fIn = feval(k_velBC,fIn,ux,uy,rho,ux_p,uy_p,lnl,N_lnl,nnodes);
               
         % set macroscopic and Microscopic Dirichlet-type boundary
         % conditions
-        % set macroscopic BC
+        % set macroscopic BC (needs to be done after microscopic
+        % application to be consistent with the gold standard - also, I
+        % think the gold standard did it correctly otherwise the method of
+        % setting BCs does not really work the way it is intended.
         ux(snl)=0; uy(snl)=0;
         ux(lnl)=u_lbm; uy(lnl)=0;
-       
+             
         
-         % set microscopic BC
-        %fIn(lnl,:)=velocityBC_D2Q9(fIn(lnl,:),w,ex,ey,ux_p,uy_p);
-        fIn = feval(k_velBC,fIn,ux,uy,rho,ux_p,uy_p,lnl,N_lnl,nnodes);
         
         % compute equilibrium
         for i = 1:numSpd

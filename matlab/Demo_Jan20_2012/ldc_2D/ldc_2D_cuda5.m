@@ -182,6 +182,13 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     k_eq.ThreadBlockSize = [TPB,1,1];
     k_eq.GridSize = [ceil(nnodes/TPB),1,1];
     
+    k_bounce = parallel.gpu.CUDAKernel('bounceBackD2Q9.ptx',...
+        'bounceBackD2Q9.cu');
+    TPB = 64;
+    k_bounce.ThreadBlockSize = [TPB,1,1];
+    N_snl = length(snl);
+    k_bounce.GridSize = [ceil(N_snl/TPB),1,1];
+    
     profile on
     
     for ts = 1:Num_ts
@@ -213,21 +220,23 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
        
         
         % compute equilibrium
-        for i = 1:numSpd
-            cu = 3*(ex(i)*ux+ey(i)*uy);
-            fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
-                (3/2)*(ux.^2 + uy.^2 ));
-        end
+%         for i = 1:numSpd
+%             cu = 3*(ex(i)*ux+ey(i)*uy);
+%             fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
+%                 (3/2)*(ux.^2 + uy.^2 ));
+%         end
+%         
+        fEq = feval(k_eq,fEq,ux,uy,rho,nnodes);
         
         % Collide
         fOut= fIn - (fIn - fEq)*omega_op;
         
         
         % bounce-back
-        for i = 1:numSpd
-            fOut(snl,i)=fIn(snl,bb_spd(i));
-        end
-        
+%         for i = 1:numSpd
+%             fOut(snl,i)=fIn(snl,bb_spd(i));
+%         end
+        fOut = feval(k_bounce,fOut,fIn,snl,N_snl,nnodes);
         
         % stream
         %fIn(stream_tgt)=fOut(:);
@@ -271,7 +280,6 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     ex_time = toc;
     fprintf('Lattice-point updates per second = %g.\n',nnodes*Num_ts/ex_time);
     fprintf('Validation check, error = %g \n',validate(fIn));
-    
     
     profile viewer
     

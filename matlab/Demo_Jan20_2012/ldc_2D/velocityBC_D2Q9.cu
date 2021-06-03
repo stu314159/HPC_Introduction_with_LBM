@@ -11,7 +11,7 @@ __global__ void velocityBC_D2Q9(double * fIn, const double * ux, const double * 
   int tid = blockIdx.x*blockDim.x + threadIdx.x;
   if (tid < N_lnl)
   { 
-    int g_lp = lnl[tid]-1; // fix off-by-one bug
+    int g_lp = lnl[tid] - 1; // fix off-by-one bug
     double dx = ux_p[tid] - ux[g_lp];
     double dy = uy_p[tid] - uy[g_lp];
     double cu;

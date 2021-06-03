@@ -33,8 +33,8 @@ Ld = 1; Td = 1; Ud = (To/Lo)*Uavg;
 nu_d = 1/Re;
 
 % convert to LBM units
-dt = 0.0008974;
-Ny_divs = 101;
+dt = 0.0002;
+Ny_divs = 201;
 dx = 1/(Ny_divs-1);
 u_lbm = (dt/dx)*Ud;
 nu_lbm=(dt/(dx^2))*nu_d;
@@ -182,6 +182,13 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     k_eq.ThreadBlockSize = [TPB,1,1];
     k_eq.GridSize = [ceil(nnodes/TPB),1,1];
     
+    k_bounce = parallel.gpu.CUDAKernel('bounceBackD2Q9.ptx',...
+        'bounceBackD2Q9.cu');
+    TPB = 64;
+    k_bounce.ThreadBlockSize = [TPB,1,1];
+    N_snl = length(snl);
+    k_bounce.GridSize = [ceil(N_snl/TPB),1,1];
+    
     profile on
     
     for ts = 1:Num_ts
@@ -199,16 +206,18 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         uy = (fIn*ey')./rho;
         
               
-        % set macroscopic and Microscopic Dirichlet-type boundary
-        % conditions
-        % set macroscopic BC
-        ux(snl)=0; uy(snl)=0;
-        ux(lnl)=u_lbm; uy(lnl)=0;
        
         
          % set microscopic BC
         %fIn(lnl,:)=velocityBC_D2Q9(fIn(lnl,:),w,ex,ey,ux_p,uy_p);
         fIn = feval(k_velBC,fIn,ux,uy,rho,ux_p,uy_p,lnl,N_lnl,nnodes);
+        
+         % set macroscopic and Microscopic Dirichlet-type boundary
+        % conditions
+        % set macroscopic BC
+        ux(snl)=0; uy(snl)=0;
+        ux(lnl)=u_lbm; uy(lnl)=0;
+       
         
         % compute equilibrium
 %         for i = 1:numSpd
@@ -270,6 +279,8 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     end
     ex_time = toc;
     fprintf('Lattice-point updates per second = %g.\n',nnodes*Num_ts/ex_time);
+    fprintf('Validation check, error = %g \n',validate(fIn));
+    
     profile viewer
     
 else
