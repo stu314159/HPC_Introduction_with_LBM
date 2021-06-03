@@ -5,7 +5,7 @@ clc
 close('all');
 
 % decide whether or not to save output to compare with accelerated results
-make_gold_standard = 0;
+make_gold_standard = 1;
 
 dynamics = 1;
 % 1 = LBGK
@@ -35,7 +35,7 @@ nu_d = 1/Re;
 
 % convert to LBM units
 dt = 0.0002;
-Ny_divs = 201;
+Ny_divs = 301;
 dx = 1/(Ny_divs-1);
 u_lbm = (dt/dx)*Ud;
 nu_lbm=(dt/(dx^2))*nu_d;

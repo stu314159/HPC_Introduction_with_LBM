@@ -34,7 +34,7 @@ nu_d = 1/Re;
 
 % convert to LBM units
 dt = 0.0002;
-Ny_divs = 201;
+Ny_divs = 301;
 dx = 1/(Ny_divs-1);
 u_lbm = (dt/dx)*Ud;
 nu_lbm=(dt/(dx^2))*nu_d;
