@@ -8,7 +8,7 @@ __global__ void streamD2Q9(double * fIn, const double * fOut, const int * stm, c
     for(int spd = 0; spd < numSpd; spd++)
     {
       int dof = N*spd + tid;
-      int tgt_dof = N*spd + stm[dof];
+      int tgt_dof = N*spd + stm[dof]-1;// correct for off-by-one issue for MATLAB/C
       fIn[tgt_dof] = fOut[dof];
     }  
   }
