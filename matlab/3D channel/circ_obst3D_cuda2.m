@@ -1,4 +1,9 @@
-%circ_obst3D.m
+%circ_obst3D_cuda2.m
+% include a cuda kernel implementation for streaming as the profiler
+% indicates that this is the most time-consuming operation
+
+% computes fEq using a cuda kernel; this is the next most time-consuming
+% operation
 
 clear
 clc
@@ -332,6 +337,19 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     stm = gpuArray(int32(stm));
     bb_spd = gpuArray(int32(bb_spd));
     
+    % establish cuda kernels
+    k_stream = parallel.gpu.CUDAKernel('streamLBM.ptx',...
+        'streamLBM.cu');
+    TPB = 128;
+    k_stream.ThreadBlockSize = [TPB,1,1];
+    k_stream.GridSize = [ceil(nnodes/TPB),1,1];
+    
+    k_eq = parallel.gpu.CUDAKernel('calcFeqD3Q19.ptx',...
+        'calcFeqD3Q19.cu');
+    TPB = 128;
+    k_eq.ThreadBlockSize = [TPB,1,1];
+    k_eq.GridSize = [ceil(nnodes/TPB),1,1];
+    
     profile on
     
     for ts=1:Num_ts
@@ -370,12 +388,12 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         % compute stress tensor from known velocities (indir_p and indir_0)
         % first, I need to know fEq...might as well compute it
         % everywhere...
-        for i = 1:numSpd
-            cu = 3*(ex(i)*ux+ey(i)*uy+ez(i)*uz);
-            fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
-                (3/2)*(ux.^2 + uy.^2 + uz.^2));
-        end
-        
+%         for i = 1:numSpd
+%             cu = 3*(ex(i)*ux+ey(i)*uy+ez(i)*uz);
+%             fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
+%                 (3/2)*(ux.^2 + uy.^2 + uz.^2));
+%         end
+        fEq = feval(k_eq,fEq,ux,uy,uz,rho,nnodes);
         
         switch BC_type
             
@@ -422,10 +440,10 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         
         % stream
         %fIn(stream_tgt)=fOut(:);
-        for i = 1:numSpd
-            fIn(stm(:,i),i)=fOut(:,i);
-        end
-        
+%         for i = 1:numSpd
+%             fIn(stm(:,i),i)=fOut(:,i);
+%         end
+        fIn = feval(k_stream,fIn,fOut,stm,numSpd,nnodes);
         
         
         if(mod(ts,plot_freq)==0)

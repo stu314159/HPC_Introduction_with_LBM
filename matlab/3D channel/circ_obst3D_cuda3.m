@@ -1,4 +1,11 @@
-%circ_obst3D.m
+%circ_obst3D_cuda2.m
+% include a cuda kernel implementation for streaming as the profiler
+% indicates that this is the most time-consuming operation
+
+% computes fEq using a cuda kernel; this is the next most time-consuming
+% operation
+
+% does bounce-back with a CUDA kernel.
 
 clear
 clc
@@ -11,9 +18,11 @@ make_gold_standard = 0;
 % Regularized BCs
 % Re = 5
 % Ndivs = 21
-% Num_ts = 100
+% Num_ts = 1000
 % sphere obstacle
 % fluid = glycol
+
+profile_code = 1;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -35,9 +44,9 @@ entropic = 0;
 sim_name = 'circ_obst3D_Re5';
 ts_num=0;
 
-Num_ts = 100;
-ts_rep_freq = 50;
-plot_freq = 50;
+Num_ts = 1000;
+ts_rep_freq = 100;
+plot_freq = 500;
 
 Re = 5;
 dt = 2e-3;
@@ -332,7 +341,29 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     stm = gpuArray(int32(stm));
     bb_spd = gpuArray(int32(bb_spd));
     
-    profile on
+    % establish cuda kernels
+    k_stream = parallel.gpu.CUDAKernel('streamLBM.ptx',...
+        'streamLBM.cu');
+    TPB = 128;
+    k_stream.ThreadBlockSize = [TPB,1,1];
+    k_stream.GridSize = [ceil(nnodes/TPB),1,1];
+    
+    k_eq = parallel.gpu.CUDAKernel('calcFeqD3Q19.ptx',...
+        'calcFeqD3Q19.cu');
+    TPB = 128;
+    k_eq.ThreadBlockSize = [TPB,1,1];
+    k_eq.GridSize = [ceil(nnodes/TPB),1,1];
+    
+    k_bounce = parallel.gpu.CUDAKernel('bounceBackD3Q19.ptx',...
+        'bounceBackD3Q19.cu');
+    TPB = 64;
+    k_bounce.ThreadBlockSize = [TPB,1,1];
+    N_snl = length(snl);
+    k_bounce.GridSize = [ceil(N_snl/TPB),1,1];
+    
+    if profile_code == 1
+     profile on
+    end
     
     for ts=1:Num_ts
        
@@ -370,12 +401,12 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         % compute stress tensor from known velocities (indir_p and indir_0)
         % first, I need to know fEq...might as well compute it
         % everywhere...
-        for i = 1:numSpd
-            cu = 3*(ex(i)*ux+ey(i)*uy+ez(i)*uz);
-            fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
-                (3/2)*(ux.^2 + uy.^2 + uz.^2));
-        end
-        
+%         for i = 1:numSpd
+%             cu = 3*(ex(i)*ux+ey(i)*uy+ez(i)*uz);
+%             fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
+%                 (3/2)*(ux.^2 + uy.^2 + uz.^2));
+%         end
+        fEq = feval(k_eq,fEq,ux,uy,uz,rho,nnodes);
         
         switch BC_type
             
@@ -415,17 +446,17 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         
        
         % bounce-back
-        for i = 1:numSpd
-            fOut(snl,i)=fIn(snl,bb_spd(i));
-        end
-        
+%         for i = 1:numSpd
+%             fOut(snl,i)=fIn(snl,bb_spd(i));
+%         end
+        fOut = feval(k_bounce,fOut,fIn,snl,int32(N_snl),nnodes);
         
         % stream
         %fIn(stream_tgt)=fOut(:);
-        for i = 1:numSpd
-            fIn(stm(:,i),i)=fOut(:,i);
-        end
-        
+%         for i = 1:numSpd
+%             fIn(stm(:,i),i)=fOut(:,i);
+%         end
+        fIn = feval(k_stream,fIn,fOut,stm,numSpd,nnodes);
         
         
         if(mod(ts,plot_freq)==0)
@@ -461,7 +492,9 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     
     fprintf('Validation check, error = %g \n',validate(fIn));
     
-    profile viewer
+    if profile_code == 1
+        profile viewer
+    end
     
 
     
