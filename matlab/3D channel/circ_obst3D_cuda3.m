@@ -11,7 +11,7 @@ clear
 clc
 close('all')
 
-make_gold_standard = 0;
+make_gold_standard = 1;
 % for now, gold standard =
 % D3Q19 lattice
 % LBGK dynamics
@@ -489,6 +489,8 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     if make_gold_standard == 1
         save('gold_standard.mat','fIn');
     end
+    
+    clear fOut fEq stm rho ux uy uz
     
     fprintf('Validation check, error = %g \n',validate(fIn));
     
