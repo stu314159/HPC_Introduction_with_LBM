@@ -75,13 +75,13 @@ int main(int argc, char** argv)
     ++counter; // keep track of how many iterations I take.
     
     // Rusanov update
-    f_nm = 0.5*(f(x_p) + f) - (nu/3.0)*(f(x_p)-f);
+    f_nm = 0.5*(f(x_p) + f) - (nu/3.0)*(f(x_p)-f); // step 1
     f_nm.eval(); // ensure f_nm is evaluated before moving on
-    f_tmp = f - (2.*nu/3.)*(f_nm - f_nm(x_m));
+    f_tmp = f - (2.*nu/3.)*(f_nm - f_nm(x_m)); // step 2
     f_tmp.eval(); // ensure f_tmp is evaluated before moving on
     f_tmp2 = f - (nu/24.)*(-2.*f(x_2p)+7.*f(x_p) - 7.*f(x_m) + 2.*f(x_2m))
              -(3.*nu/8.)*(f_tmp(x_p) - f_tmp(x_m))
-             -(omega/24.)*(f(x_2p) - 4.*f(x_p)+6.*f(x_m) - 4.*f(x_m) +f(x_2m));
+             -(omega/24.)*(f(x_2p) - 4.*f(x_p)+6.*f - 4.*f(x_m) +f(x_2m)); // step 3
     f = f_tmp2;
     
     // if it's time to plot, call the plot function 
