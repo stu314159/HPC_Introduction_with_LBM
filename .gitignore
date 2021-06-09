@@ -12,3 +12,7 @@ ipython_config.py
 *.vtk
 *.vtk*
 *.mat
+*.b_dat
+*.xmf
+*.h5
+*.lbm
