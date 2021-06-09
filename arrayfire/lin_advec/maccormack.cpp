@@ -60,7 +60,7 @@ int main(int argc, char** argv)
   do{ 
     ++counter; // keep track of how many iterations I take.
     
-    // Lax update
+    // MacCormack update
     f_tmp1 = f - (u*dt/dx)*(f(x_p)-f);
     f_tmp = 0.5*(f + f_tmp1 - (u*dt/dx)*(f_tmp1 - f_tmp1(x_m)));
     f = f_tmp; 
