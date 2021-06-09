@@ -4,7 +4,7 @@ clear
 %clc
 close('all')
 
-N = 50000;
+N = 25;
 u = 1;
 
 plot_freq = 2500;
@@ -18,7 +18,7 @@ dt = 0.6*(dx)/u;
 nu = u*dx/dt;
 
 %Num_ts = min(1000,ceil(15/dt));
-Num_ts=5000;
+Num_ts=5;
 % set initial condition
 %f = zeros(N,1);
 
