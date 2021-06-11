@@ -26,3 +26,5 @@ ipython_config.py
 **/*.cbp
 **/CMakeScripts
 **/compile_commands.json
+
+*.a
