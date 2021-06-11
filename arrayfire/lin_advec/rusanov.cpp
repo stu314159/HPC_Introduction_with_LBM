@@ -100,7 +100,7 @@ int main(int argc, char** argv)
   std::cout << "total time steps: " << counter << std::endl;
   double ex_time_per_dof = (ms_double.count()/1000.)/((double)(N*counter));
   std::cout << "Execution time per DOF: " << ex_time_per_dof << std::endl;
-  std::cout << "Good by!" << std::endl;
+  std::cout << "Goodbye!" << std::endl;
 
   return 0;
 }
