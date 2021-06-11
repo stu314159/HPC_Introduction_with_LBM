@@ -166,7 +166,7 @@ int main(int argc, char** argv)
       
       // figure out how to plot the data on the GPU
       af_umag = sqrt(af_ux*af_ux + af_uy*af_uy);  
-      af_umag = af_umag*100.;     
+      af_umag.eval();    
       array img_umag = moddims(af_umag,N,N,1,1);
       myWindow.image(af_umag);
       // transfer data to host and plot with vtk shit
@@ -201,6 +201,13 @@ int main(int argc, char** argv)
   
   
   // be a good leader; free your memory
+  
+  freeHost(pressure_h);
+  freeHost(ux_h);
+  freeHost(uy_h);
+  freeHost(uz_h);
+  freeHost(z_h);
+  
   delete [] fDD;
   delete [] ndType;
   delete [] ux;
