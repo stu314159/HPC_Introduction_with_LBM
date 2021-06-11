@@ -8,9 +8,11 @@ find_package(CUDA)
 add_executable(ldc2d src/ldc2d_af.cu)
 
 add_library(lbm_lib STATIC src/lbm_lib.cu include/lbm_lib.h)
+add_library(vtk_lib STATIC src/vtk_lib.cxx include/vtk_lib.h)
 
 target_include_directories(ldc2d PUBLIC include PRIVATE ${ArrayFire_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 target_include_directories(lbm_lib PUBLIC include)
+target_include_directories(vtk_lib PUBLIC include)
 #set_property(TARGET ldc2d PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
-target_link_libraries(ldc2d ${CUDA_LIBRARIES} ArrayFire::afcuda lbm_lib )
+target_link_libraries(ldc2d ${CUDA_LIBRARIES} ArrayFire::afcuda lbm_lib vtk_lib )

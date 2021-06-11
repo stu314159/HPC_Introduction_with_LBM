@@ -2,6 +2,9 @@
 #include <af/cuda.h>
 
 #include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
 #include <cassert>
 #include <chrono>
 #include <cmath>
@@ -11,6 +14,7 @@
 
 // My Includes
 #include "lbm_lib.h"
+#include "vtk_lib.h"
 
 using namespace af;
 using namespace std;
@@ -74,6 +78,7 @@ int main(int argc, char** argv)
   float t_conv;
   float p_conv;
   float l_conv;
+  
 
   // call setup function to initialize fDD and ndType
   // as well as to get scaling data
@@ -91,11 +96,107 @@ int main(int argc, char** argv)
   array af_uy(nnodes); // ditto 
   array af_pressure(nnodes);
   array af_w = constant(0,nnodes);
-  array af_z = constant(0,nnodes);
- 
+  array af_z = constant(0,nnodes);  
+  array af_umag(nnodes);
+  
+  // host pointers
+  float * ux_h;
+  float * uy_h;
+  float * uz_h;  uz_h = af_w.host<float>(); //dumb, but okay.
+  float * pressure_h;
+  float * z_h = af_z.host<float>(); // again, dumb, but okay.
+  
+  // define some utility variables for visualization
+  string densityFileStub("pressure");
+  string velocityFileStub("velocityMagnitude");
+  string vectorVelFileStub("velocity");
+  string velocityCSVFileStub("velocityMagCSV");
+  string fileSuffix(".vtk");
+  string fileSuffixCSV(".csv");
+  stringstream ts_ind;
+  string ts_ind_str;
+  int vtk_ts = 0;
+  string fileName1;
+  string fileName2;
+  string fileName3;
+  string fileNameCSV;
+  string dataName1("pressure");
+  string dataName2("velocityMagnitude");
+  string dataName3("velocity");
+  int dims[3];
+  dims[0]=N; dims[1]=N; dims[2]=1;
+  float origin[3];
+  origin[0]=0.; origin[1]=0.; origin[2]=0.;
+  float spacing[3];
+  spacing[0]=l_conv; spacing[1]=l_conv; spacing[2]=l_conv;
   
   
+   
+  af::Window myWindow(N,N,"Lid Driven Cavity");
+  myWindow.setColorMap(AF_COLORMAP_PLASMA);
+   
+  for(uint ts = 0; ts<numTs; ts++)
+  {
+    if((ts+1)%1000 == 0)
+    {
+      cout << "Executing time step " << (ts+1) << endl;
+    }
+    
+    if(ts%2==0)
+    {
+      // use the lbm_lib timestep function and associated kernels
+      LDC2D_timestep(fOdd.device<float>(),fEven.device<float>(),
+                     omega, af_ndType.device<int>(),u,N);
+      fOdd.unlock(); fEven.unlock(); af_ndType.unlock();      
+    
+    } else {
+    
+      LDC2D_timestep(fEven.device<float>(),fOdd.device<float>(),
+                     omega, af_ndType.device<int>(),u,N);    
+      fOdd.unlock(); fEven.unlock(); af_ndType.unlock();
+    }
+    
+    if((ts%dataFrequency)==0)
+    {
+      LDC2D_getVelocityAndDensity(af_ux.device<float>(),af_uy.device<float>(),
+                                  af_pressure.device<float>(),u_conv,p_conv,
+                                  fEven.device<float>(),N);
+      af_ux.unlock(); af_uy.unlock(); af_pressure.unlock(); fEven.unlock();
+     
+      
+      // figure out how to plot the data on the GPU
+      af_umag = sqrt(af_ux*af_ux + af_uy*af_uy);  
+      af_umag = af_umag*100.;     
+      array img_umag = moddims(af_umag,N,N,1,1);
+      myWindow.image(af_umag);
+      // transfer data to host and plot with vtk shit
+      ux_h = af_ux.host<float>(); uy_h = af_uy.host<float>(); 
+      pressure_h = af_pressure.host<float>();
+      
+      // compute velocity magnitude (on the host)
+      LDC2D_getVelocityMagnitude(uMag,ux_h,uy_h,N);
+      // set pressure relative to the central lattice point (on the host)
+      LDC2D_getRelativePressure(pressure_h,N);
+      
+      // set file names
+	  ts_ind << vtk_ts; vtk_ts++;
+	  fileName1 = densityFileStub+ts_ind.str()+fileSuffix;
+	  fileName2 = velocityFileStub+ts_ind.str()+fileSuffix;
+	  fileName3 = vectorVelFileStub+ts_ind.str()+fileSuffix;
+	  fileNameCSV= velocityCSVFileStub+ts_ind.str()+fileSuffixCSV;
+	  ts_ind.str("");
+
+	  // output data file.
+	  SaveVTKImageData_ascii(pressure_h,fileName1,dataName1,origin,spacing,dims);
+	  SaveVTKImageData_ascii(uMag,fileName2,dataName2,origin,spacing,dims);
+      SaveVTKStructuredGridVectorAndMagnitude_ascii(ux_h,uy_h,uz_h,
+                                                    xCoord,yCoord,z_h,
+                                                    fileName3,dataName3,dims);		 
+    
+    }
   
+  
+  }
   
   
   
