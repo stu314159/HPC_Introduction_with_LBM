@@ -24,7 +24,7 @@ int main(int argc, char** argv)
   af::info();
   
   // the user may forget an input; remind him/her
-  if(argc<6){
+  if(argc<7){
     cout << "Fewer than 5 input arguments detected!" << endl;
     cout << "Usage: >>ldc2D [Re] [N] [TS] [omega] [dataFreq] where:" << endl;
     cout << "[Re] = flow Reynolds number." << endl;
@@ -32,6 +32,7 @@ int main(int argc, char** argv)
     cout << "[TS] = Number of time steps to perform." << endl;
     cout << "[omega] = relaxation parameter." << endl;
     cout << "[dataFreq] = # time steps between data outputs" << endl;
+    cout << "[vtk_out] = [1 = vtk output | 0 = no vtk output]" << endl;
     cout << "Exiting the program.  Please try again." << endl;
     exit(1);
   } 
@@ -41,6 +42,7 @@ int main(int argc, char** argv)
   uint numTs = (uint)atoi(argv[3]);
   float omega = (float)atof(argv[4]);
   uint dataFrequency = (uint)atoi(argv[5]);
+  bool vtk_out = (bool)atoi(argv[6]);
 
   cout << "Re = " << Re << endl;
   cout << "N = " << N << endl;
@@ -168,30 +170,36 @@ int main(int argc, char** argv)
       af_umag = sqrt(af_ux*af_ux + af_uy*af_uy);  
       af_umag.eval();    
       array img_umag = moddims(af_umag,N,N,1,1);
-      myWindow.image(af_umag);
-      // transfer data to host and plot with vtk shit
-      ux_h = af_ux.host<float>(); uy_h = af_uy.host<float>(); 
-      pressure_h = af_pressure.host<float>();
+      img_umag *= 1000.; // try scaling this...
+      img_umag.eval();
+      myWindow.image(img_umag);
       
-      // compute velocity magnitude (on the host)
-      LDC2D_getVelocityMagnitude(uMag,ux_h,uy_h,N);
-      // set pressure relative to the central lattice point (on the host)
-      LDC2D_getRelativePressure(pressure_h,N);
+      if (vtk_out)
+      {
+        // transfer data to host and plot with vtk shit
+        ux_h = af_ux.host<float>(); uy_h = af_uy.host<float>(); 
+        pressure_h = af_pressure.host<float>();
       
-      // set file names
-	  ts_ind << vtk_ts; vtk_ts++;
-	  fileName1 = densityFileStub+ts_ind.str()+fileSuffix;
-	  fileName2 = velocityFileStub+ts_ind.str()+fileSuffix;
-	  fileName3 = vectorVelFileStub+ts_ind.str()+fileSuffix;
-	  fileNameCSV= velocityCSVFileStub+ts_ind.str()+fileSuffixCSV;
-	  ts_ind.str("");
+        // compute velocity magnitude (on the host)
+        LDC2D_getVelocityMagnitude(uMag,ux_h,uy_h,N);
+        // set pressure relative to the central lattice point (on the host)
+        LDC2D_getRelativePressure(pressure_h,N);
+      
+        // set file names
+	    ts_ind << vtk_ts; vtk_ts++;
+	    fileName1 = densityFileStub+ts_ind.str()+fileSuffix;
+	    fileName2 = velocityFileStub+ts_ind.str()+fileSuffix;
+	    fileName3 = vectorVelFileStub+ts_ind.str()+fileSuffix;
+	    fileNameCSV= velocityCSVFileStub+ts_ind.str()+fileSuffixCSV;
+	    ts_ind.str("");
 
-	  // output data file.
-	  SaveVTKImageData_ascii(pressure_h,fileName1,dataName1,origin,spacing,dims);
-	  SaveVTKImageData_ascii(uMag,fileName2,dataName2,origin,spacing,dims);
-      SaveVTKStructuredGridVectorAndMagnitude_ascii(ux_h,uy_h,uz_h,
-                                                    xCoord,yCoord,z_h,
-                                                    fileName3,dataName3,dims);		 
+	    // output data file.
+	    SaveVTKImageData_ascii(pressure_h,fileName1,dataName1,origin,spacing,dims);
+	    SaveVTKImageData_ascii(uMag,fileName2,dataName2,origin,spacing,dims);
+        SaveVTKStructuredGridVectorAndMagnitude_ascii(ux_h,uy_h,uz_h,
+                                                      xCoord,yCoord,z_h,
+                                                      fileName3,dataName3,dims);
+      }		 
     
     }
   
@@ -202,11 +210,14 @@ int main(int argc, char** argv)
   
   // be a good leader; free your memory
   
-  freeHost(pressure_h);
-  freeHost(ux_h);
-  freeHost(uy_h);
-  freeHost(uz_h);
-  freeHost(z_h);
+  if (vtk_out)
+  {
+    freeHost(pressure_h);
+    freeHost(ux_h);
+    freeHost(uy_h);
+    freeHost(uz_h);
+    freeHost(z_h);
+  }
   
   delete [] fDD;
   delete [] ndType;
