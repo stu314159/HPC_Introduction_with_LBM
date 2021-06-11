@@ -1,5 +1,5 @@
 # HPC_Introduction_with_LBM
-A repository of scripts, notebooks, code, and other materials to use with the 2021 HPC internship
+A repository of scripts, notebooks, code, and other materials to use with an HPC internship
 
 Dependencies vary from component to component of the introduction. 
 a) projets based on Arrayfire require the Arrayfire library; tested with version 3.7.3
