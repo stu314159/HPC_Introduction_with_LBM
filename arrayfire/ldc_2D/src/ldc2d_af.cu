@@ -23,6 +23,11 @@ int main(int argc, char** argv)
 {
   af::info();
   
+  using std::chrono::high_resolution_clock;
+  using std::chrono::duration_cast;
+  using std::chrono::duration;
+  using std::chrono::milliseconds;
+  
   // the user may forget an input; remind him/her
   if(argc<7){
     cout << "Fewer than 5 input arguments detected!" << endl;
@@ -131,12 +136,12 @@ int main(int argc, char** argv)
   origin[0]=0.; origin[1]=0.; origin[2]=0.;
   float spacing[3];
   spacing[0]=l_conv; spacing[1]=l_conv; spacing[2]=l_conv;
-  
-  
    
   af::Window myWindow(N,N,"Lid Driven Cavity");
   myWindow.setColorMap(AF_COLORMAP_PLASMA);
    
+  
+  auto t1 = high_resolution_clock::now(); // start the timer
   for(uint ts = 0; ts<numTs; ts++)
   {
     if((ts+1)%1000 == 0)
@@ -160,6 +165,7 @@ int main(int argc, char** argv)
     
     if((ts%dataFrequency)==0)
     {
+      
       LDC2D_getVelocityAndDensity(af_ux.device<float>(),af_uy.device<float>(),
                                   af_pressure.device<float>(),u_conv,p_conv,
                                   fEven.device<float>(),N);
@@ -170,7 +176,9 @@ int main(int argc, char** argv)
       af_umag = sqrt(af_ux*af_ux + af_uy*af_uy);  
       af_umag.eval();    
       array img_umag = moddims(af_umag,N,N,1,1);
-      img_umag *= 1000.; // try scaling this...
+      
+      img_umag *= 100.; // this hack makes the low Re flows visible in image
+            
       img_umag.eval();
       myWindow.image(img_umag);
       
@@ -205,8 +213,12 @@ int main(int argc, char** argv)
   
   
   }
+  auto t2 = high_resolution_clock::now();// stop the timer
+  duration<double,std::milli> ms_double = t2 - t1;
+  double LPUs = ((double)nnodes)*((double)numTs)/(ms_double.count()/1000.);
   
-  
+  cout << "Execution time: " << ms_double.count()/1000. << " seconds." << endl;
+  cout << "Approximate Lattice Point Updates per Second: " << LPUs << endl;
   
   // be a good leader; free your memory
   
