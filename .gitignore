@@ -30,3 +30,6 @@ ipython_config.py
 *.a
 
 **/build/
+
+# leave off the output files from slurm/PBS jubs
+*.out
