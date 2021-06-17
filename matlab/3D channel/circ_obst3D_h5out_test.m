@@ -1,11 +1,4 @@
-%circ_obst3D_cuda2.m
-% include a cuda kernel implementation for streaming as the profiler
-% indicates that this is the most time-consuming operation
-
-% computes fEq using a cuda kernel; this is the next most time-consuming
-% operation
-
-% does bounce-back with a CUDA kernel.
+%circ_obst3D.m
 
 clear
 clc
@@ -18,11 +11,9 @@ make_gold_standard = 0;
 % Regularized BCs
 % Re = 5
 % Ndivs = 21
-% Num_ts = 1000
+% Num_ts = 100
 % sphere obstacle
 % fluid = glycol
-
-profile_code = 0;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -44,9 +35,9 @@ entropic = 0;
 sim_name = 'circ_obst3D_Re5';
 ts_num=0;
 
-Num_ts = 10000;
-ts_rep_freq = 100;
-plot_freq = 500;
+Num_ts = 100;
+ts_rep_freq = 50;
+plot_freq = 50;
 
 Re = 5;
 dt = 2e-3;
@@ -324,48 +315,6 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
 
     % do some more pre-time-stepping set-up
     tic;
-    
-    % send data to the GPU
-    fIn = gpuArray(fIn);
-    fOut = gpuArray(fOut);
-    fEq = gpuArray(fEq);
-    ex = gpuArray(ex); ey = gpuArray(ey); ez = gpuArray(ez);
-    rho = gpuArray(rho);
-    snl = gpuArray(int32(snl));
-    inl = gpuArray(int32(inl));
-    onl = gpuArray(int32(onl));
-    indir_p = gpuArray(int32(indir_p));
-    outdir_p = gpuArray(int32(outdir_p));
-    
-    Q_mn = gpuArray(Q_mn);
-    Q_flat = gpuArray(Q_flat);
-    stm = gpuArray(int32(stm));
-    bb_spd = gpuArray(int32(bb_spd));
-    
-    % establish cuda kernels
-    k_stream = parallel.gpu.CUDAKernel('streamLBM.ptx',...
-        'streamLBM.cu');
-    TPB = 128;
-    k_stream.ThreadBlockSize = [TPB,1,1];
-    k_stream.GridSize = [ceil(nnodes/TPB),1,1];
-    
-    k_eq = parallel.gpu.CUDAKernel('calcFeqD3Q19.ptx',...
-        'calcFeqD3Q19.cu');
-    TPB = 128;
-    k_eq.ThreadBlockSize = [TPB,1,1];
-    k_eq.GridSize = [ceil(nnodes/TPB),1,1];
-    
-    k_bounce = parallel.gpu.CUDAKernel('bounceBackD3Q19.ptx',...
-        'bounceBackD3Q19.cu');
-    TPB = 64;
-    k_bounce.ThreadBlockSize = [TPB,1,1];
-    N_snl = length(snl);
-    k_bounce.GridSize = [ceil(N_snl/TPB),1,1];
-    
-    if profile_code == 1
-     profile on
-    end
-    
     for ts=1:Num_ts
        
         if(mod(ts,ts_rep_freq)==0)
@@ -402,12 +351,12 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         % compute stress tensor from known velocities (indir_p and indir_0)
         % first, I need to know fEq...might as well compute it
         % everywhere...
-%         for i = 1:numSpd
-%             cu = 3*(ex(i)*ux+ey(i)*uy+ez(i)*uz);
-%             fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
-%                 (3/2)*(ux.^2 + uy.^2 + uz.^2));
-%         end
-        fEq = feval(k_eq,fEq,ux,uy,uz,rho,nnodes);
+        for i = 1:numSpd
+            cu = 3*(ex(i)*ux+ey(i)*uy+ez(i)*uz);
+            fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
+                (3/2)*(ux.^2 + uy.^2 + uz.^2));
+        end
+        
         
         switch BC_type
             
@@ -447,17 +396,17 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         
        
         % bounce-back
-%         for i = 1:numSpd
-%             fOut(snl,i)=fIn(snl,bb_spd(i));
-%         end
-        fOut = feval(k_bounce,fOut,fIn,snl,int32(N_snl),nnodes);
+        for i = 1:numSpd
+            fOut(snl,i)=fIn(snl,bb_spd(i));
+        end
+        
         
         % stream
         %fIn(stream_tgt)=fOut(:);
-%         for i = 1:numSpd
-%             fIn(stm(:,i),i)=fOut(:,i);
-%         end
-        fIn = feval(k_stream,fIn,fOut,stm,numSpd,nnodes);
+        for i = 1:numSpd
+            fIn(stm(:,i),i)=fOut(:,i);
+        end
+        
         
         
         if(mod(ts,plot_freq)==0)
@@ -469,20 +418,16 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
             pressure_h = rho*p_conv_fact;
             p_offset = pressure_h(p_ref_LP);
             pressure_h = pressure_h - p_offset;
-            %vtk_suffix=sprintf('_velocityAndPressure%d.vtk',ts_num);
-            %ts_fileName=strcat(sim_name,vtk_suffix);
             
-            
-            pressure_h = gather(pressure_h);
-            ux_h = gather(ux_h); uy_h = gather(uy_h); uz_h = gather(uz_h);
-            velmag = gather(velmag);
             h5_filename=sprintf('out%d.h5',ts_num);
             xmf_filename=sprintf('data%d.xmf',ts_num);
             write_data_H5(h5_filename,nnodes,ux_h,uy_h,uz_h,velmag,pressure_h);
             writeXdmf_dp(dims,dx,xmf_filename,h5_filename);
             
-%             save_velocityAndPressureVTK_binary(reshape(pressure_h,[Nx Ny Nz]),...
-%                 ux_h,uy_h,uz_h,Xp,Yp,Zp,ts_fileName);
+            %vtk_suffix=sprintf('_velocityAndPressure%d.vtk',ts_num);
+            %ts_fileName=strcat(sim_name,vtk_suffix);
+            %save_velocityAndPressureVTK_binary(reshape(pressure_h,[Nx Ny Nz]),...
+            %    ux_h,uy_h,uz_h,Xp,Yp,Zp,ts_fileName);
             
             ts_num=ts_num+1;
             
@@ -498,15 +443,8 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         save('gold_standard.mat','fIn');
     end
     
-    clear fOut fEq stm rho ux uy uz
-    
     fprintf('Validation check, error = %g \n',validate(fIn));
     
-    if profile_code == 1
-        profile viewer
-    end
-    
-
     
 else
     fprintf('Run aborted.  Better luck next time!\n');
