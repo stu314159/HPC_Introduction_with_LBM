@@ -26,8 +26,8 @@ validation_check = 0; % set to 1 if you want to compare this run of code against
 
 profile_code = 0;
 
-load_restart = 1;
-save_restart = 1;
+load_restart = 0;
+save_restart = 0;
 
 
 lattice_selection = 2; 
@@ -127,6 +127,7 @@ switch obst_type
         a = Lx_p/4;
         c = a/1.75;
         Lo = 2*a;
+        p = pi/6; % angle of attack
     
 end
 
@@ -236,12 +237,18 @@ switch obst_type
         snl = unique(snl);
         
     case 'obl_sph'
-        obl_sph_fun = @(x,y,z) ((x - x_c).^2 + (z - z_c).^2)./(a^2) + ...
-            ((y - y_c).^2)./(c^2) - 1;
+
+        obl_sph_fun = @(x,y,z) ((x ).^2 + (z ).^2)./(a^2) + ...
+            ((y ).^2)./(c^2) - 1;
+        % shift coordinates to oblate spheroid center prior to rotation
+        gcoord_r = gcoord - [x_c y_c z_c];
+        rot_mat = [1 0 0; 0 cos(p) sin(p); 0 -sin(p) cos(p)];
+        gcoord_r = gcoord_r*rot_mat';
         
         obst_list = ...
-            find(obl_sph_fun(gcoord(:,1),gcoord(:,2),gcoord(:,3)) <= 0);
+            find(obl_sph_fun(gcoord_r(:,1),gcoord_r(:,2),gcoord_r(:,3)) <= 0);
         snl = [snl;obst_list];
+        snl = unique(snl);
     
 end
 
