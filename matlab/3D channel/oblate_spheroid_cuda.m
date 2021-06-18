@@ -22,7 +22,13 @@ make_gold_standard = 0;
 % sphere obstacle
 % fluid = glycol
 
+validation_check = 0; % set to 1 if you want to compare this run of code against gold standard
+
 profile_code = 0;
+
+load_restart = 1;
+save_restart = 1;
+
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -41,16 +47,15 @@ entropic = 0;
 % 0 = no
 % 1 = yes
 
-sim_name = 'circ_obst3D_Re5';
-ts_num=0;
 
-Num_ts = 500000;
-ts_rep_freq = 10000;
-plot_freq = 10000;
 
-Re = 150;
+Num_ts = 1000;
+ts_rep_freq = 100;
+plot_freq = 100;
+
+Re = 300;
 dt = 2e-3;
-Ny_divs = 45;
+Ny_divs = 55;
 
 Lx_p = 1;
 Ly_p = 1;
@@ -178,6 +183,7 @@ switch lattice_selection
         lattice = 'D3Q27';
         
 end
+
 
 stm = genStreamTgtVec3Dr2(Nx,Ny,Nz,ex,ey,ez);
 
@@ -319,17 +325,29 @@ switch dynamics
         
 end
 
-
-
-% initialize to zero.
-fIn=(rho_lbm*ones(nnodes,numSpd)).*(repmat(w,nnodes,1));
-fOut = fIn; % just for initialization.
 fEq = zeros(nnodes,numSpd);
 
-rho = sum(fIn,2);
-ux = (fIn*ex')./(rho*u_conv_fact);
-uy = (fIn*ey')./(rho*u_conv_fact);
-uz = (fIn*ez')./(rho*u_conv_fact);
+if load_restart == 1
+    [ux,uy,uz,rho] =  load_restart_data();
+    for i = 1:numSpd
+        cu = 3*(ex(i)*ux+ey(i)*uy+ez(i)*uz);
+        fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
+            (3/2)*(ux.^2 + uy.^2 + uz.^2));
+    end
+    fIn = fEq;
+    fOut = fIn;
+else
+    % initialize to zero.
+    fIn=(rho_lbm*ones(nnodes,numSpd)).*(repmat(w,nnodes,1));
+    fOut = fIn; % just for initialization.
+    rho = sum(fIn,2);
+    ux = (fIn*ex')./(rho*u_conv_fact);
+    uy = (fIn*ey')./(rho*u_conv_fact);
+    uz = (fIn*ez')./(rho*u_conv_fact);
+    
+end
+
+
 
 
 
@@ -354,7 +372,7 @@ run_dec = input(input_string,'s');
 if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     
     fprintf('Ok! Cross your fingers!! \n');
-
+    ts_num=0; % for naming the visualization data files
 
     % do some more pre-time-stepping set-up
     tic;
@@ -411,10 +429,7 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
             pressure_h = rho*p_conv_fact;
             p_offset = pressure_h(p_ref_LP);
             pressure_h = pressure_h - p_offset;
-            %vtk_suffix=sprintf('_velocityAndPressure%d.vtk',ts_num);
-            %ts_fileName=strcat(sim_name,vtk_suffix);
-            
-            
+           
             pressure_h = gather(pressure_h);
             ux_h = gather(ux_h); uy_h = gather(uy_h); uz_h = gather(uz_h);
             velmag = gather(velmag);
@@ -440,9 +455,25 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         save('gold_standard.mat','fIn');
     end
     
+    if save_restart == 1
+        % ensure I have up-to-date data (in LBM units)
+        rho = sum(fIn,2);
+        ux = (fIn*ex')./rho;
+        uy = (fIn*ey')./rho;
+        uz = (fIn*ez')./rho;
+        ux(snl)=0; uy(snl)=0; uz(snl)=0;
+        
+        ux_h = gather(ux); uy_h = gather(uy); uz_h = gather(uz);
+        rho_h = gather(rho);
+        
+        write_restart_data(ux_h,uy_h,uz_h,rho_h,nnodes);
+    end
+    
     clear fOut fEq stm rho ux uy uz
     
-   % fprintf('Validation check, error = %g \n',validate(fIn));
+    if validation_check == 1
+        fprintf('Validation check, error = %g \n',validate(fIn));
+    end
     
     if profile_code == 1
         profile viewer
