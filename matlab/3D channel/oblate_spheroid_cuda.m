@@ -44,11 +44,11 @@ entropic = 0;
 sim_name = 'circ_obst3D_Re5';
 ts_num=0;
 
-Num_ts = 40000;
-ts_rep_freq = 1000;
-plot_freq = 5000;
+Num_ts = 500000;
+ts_rep_freq = 10000;
+plot_freq = 10000;
 
-Re = 100;
+Re = 150;
 dt = 2e-3;
 Ny_divs = 45;
 
