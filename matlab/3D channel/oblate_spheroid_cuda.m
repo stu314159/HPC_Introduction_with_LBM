@@ -27,10 +27,10 @@ validation_check = 0; % set to 1 if you want to compare this run of code against
 profile_code = 0;
 
 load_restart = 0;
-save_restart = 0;
+save_restart = 1;
 
 % Turbulence Model Parameter
-Cs = 0.02;
+Cs = 0.00055;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -49,13 +49,14 @@ entropic = 0;
 % 0 = no
 % 1 = yes
 
+grate_on = 0;
 
 
-Num_ts = 100000;
+Num_ts = 20000;
 ts_rep_freq = 1000;
 plot_freq = 2000;
 
-Re = 50000;
+Re = 3e4;
 dt = 1.5e-3;
 Ny_divs = 55;
 
@@ -125,11 +126,11 @@ switch obst_type
     case 'obl_sph'
         z_c = Lz_p/3;
         x_c = Lx_p/2;
-        y_c = Ly_p/2.1;
+        y_c = Ly_p/2.5;
         a = Lx_p/4;
-        c = a/1.75;
+        c = a/6;
         Lo = 2*a;
-        p = pi/6; % angle of attack
+        p = -(30/180)*pi; % angle of attack
     
 end
 
@@ -257,6 +258,8 @@ end
 % eliminate any intersection between inl and onl and the solid node lists
 inl = setxor(inl,intersect(inl,snl));
 onl = setxor(onl,intersect(onl,snl));
+
+
 
 % compute inl and onl velocity boundary conditions
 %Umax = (3/2)*u_lbm;

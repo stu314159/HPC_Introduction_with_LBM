@@ -235,7 +235,7 @@ __global__ void D3Q19_RegBC_LBGK_ts(const double * fIn, double * fOut,
     // apply the strain tensor for the turbulence model
     double nu = ((1./omega)-0.5)/3.0;
     double P = sqrt(S11*S11 + S22*S22 + S33*S33 + 2.0*(S12*S12 + S13*S13 + S23*S23));
-    P *= Cs; P = sqrt(P+nu*nu);
+    P *= Cs; P = sqrt(P+nu*nu) - nu;
     double omega_t = 1./(3.0*(nu+P/6.0)+0.5);
 
 
