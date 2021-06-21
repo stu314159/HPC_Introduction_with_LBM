@@ -29,6 +29,8 @@ profile_code = 0;
 load_restart = 0;
 save_restart = 0;
 
+% Turbulence Model Parameter
+Cs = 0.02;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -49,12 +51,12 @@ entropic = 0;
 
 
 
-Num_ts = 1000;
-ts_rep_freq = 100;
-plot_freq = 100;
+Num_ts = 100000;
+ts_rep_freq = 1000;
+plot_freq = 2000;
 
-Re = 300;
-dt = 2e-3;
+Re = 50000;
+dt = 1.5e-3;
 Ny_divs = 55;
 
 Lx_p = 1;
@@ -415,9 +417,9 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         end
         
        if(mod(ts,2)==1)
-           D3Q19_RegBC_LBGK(fOut,fIn,SNL,INL,u_lbm,ONL,rho_out,omega,Nx,Ny,Nz);
+           D3Q19_RegBC_LBGK_turb(fOut,fIn,SNL,INL,u_lbm,ONL,rho_out,omega,Cs,Nx,Ny,Nz);
        else
-           D3Q19_RegBC_LBGK(fIn,fOut,SNL,INL,u_lbm,ONL,rho_out,omega,Nx,Ny,Nz);
+           D3Q19_RegBC_LBGK_turb(fIn,fOut,SNL,INL,u_lbm,ONL,rho_out,omega,Cs,Nx,Ny,Nz);
        end
         
         if(mod(ts,plot_freq)==0)
