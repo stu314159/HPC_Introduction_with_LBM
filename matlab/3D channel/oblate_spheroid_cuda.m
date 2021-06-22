@@ -27,10 +27,10 @@ validation_check = 0; % set to 1 if you want to compare this run of code against
 profile_code = 0;
 
 load_restart = 0;
-save_restart = 1;
+save_restart = 0;
 
 % Turbulence Model Parameter
-Cs = 0.00055;
+Cs = 0.05;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
