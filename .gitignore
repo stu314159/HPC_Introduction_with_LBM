@@ -34,3 +34,6 @@ ipython_config.py
 # leave off the output files from slurm/PBS jubs
 *.out
 *.o*
+
+# the *.mexa64 files may be incompatible depending on cuda versions and matlab installs
+*.mexa64*
