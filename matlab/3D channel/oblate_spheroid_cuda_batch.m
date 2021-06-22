@@ -27,12 +27,10 @@ validation_check = 0; % set to 1 if you want to compare this run of code against
 profile_code = 0;
 
 load_restart = 0;
-save_restart = 0;
+save_restart = 1;
 
 % Turbulence Model Parameter
-
-Cs = 0.05;
-
+Cs = 0.5;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -54,13 +52,13 @@ entropic = 0;
 grate_on = 0;
 
 
-Num_ts = 20000;
+Num_ts = 200000;
 ts_rep_freq = 1000;
-plot_freq = 2000;
+plot_freq = 50000;
 
 Re = 3e4;
 dt = 1.5e-3;
-Ny_divs = 55;
+Ny_divs = 65;
 
 Lx_p = 1;
 Ly_p = 1;
@@ -379,9 +377,11 @@ fprintf('LBM viscosity = %g. \n',nu_lbm);
 fprintf('LBM relaxation parameter (omega) = %g. \n',omega);
 fprintf('LBM flow Mach number = %g. \n',u_lbm);
 
-input_string = sprintf('Do you wish to continue? [Y/n] \n');
+%input_string = sprintf('Do you wish to continue? [Y/n] \n');
 
-run_dec = input(input_string,'s');
+%run_dec = input(input_string,'s');
+
+run_dec = 'Y';
 
 if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     
