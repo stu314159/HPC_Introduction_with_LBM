@@ -54,9 +54,9 @@ entropic = 0;
 grate_on = 0;
 
 
-Num_ts = 20000;
+Num_ts = 5000;
 ts_rep_freq = 1000;
-plot_freq = 2000;
+plot_freq = 1000;
 
 Re = 3e4;
 dt = 1.5e-3;
