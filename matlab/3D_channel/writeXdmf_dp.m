@@ -12,10 +12,10 @@ fprintf(fid,'<Topology TopologyType="3DCoRectMesh" Dimensions="%d %d %d">\n',...
 fprintf(fid,'</Topology>\n');
 
 fprintf(fid,'<Geometry GeometryType="Origin_DxDyDz">\n');
-fprintf(fid,'<DataItem Dimensions="3" NumberType="Integer" Format="XML">\n');
-fprintf(fid,'0 0 0\n') ;
+fprintf(fid,'<DataItem Dimensions="3" NumberType="Double" Format="XML">\n');
+fprintf(fid,'0.0 0.0 0.0\n') ;
 fprintf(fid,'</DataItem>\n');
-fprintf(fid,'<DataItem Dimensions="3" NumberType="Integer" Format="XML">\n');
+fprintf(fid,'<DataItem Dimensions="3" NumberType="Double" Format="XML">\n');
 
 fprintf(fid,'%g %g %g \n',dx,dx,dx);
 fprintf(fid,'</DataItem>\n');
