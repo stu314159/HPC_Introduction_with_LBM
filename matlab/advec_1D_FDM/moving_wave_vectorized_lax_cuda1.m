@@ -7,7 +7,7 @@ close('all')
 N = 5000;
 u = 1;
 
-plot_freq = 2500;
+plot_freq = 5001;
 plot_switch = 1;
 x_left = -10;
 x_right = 10;
@@ -30,10 +30,10 @@ f((x_space < -5) & (x_space > -7)) = 1;
 f_tmp = zeros(N,1);
 
 % plot initial condition
-plot(x_space,f,'-b');
-axis([x_left x_right 0 1.1*f_l]);
-title('\bf{Initial Condition}');
-drawnow
+%plot(x_space,f,'-b');
+%axis([x_left x_right 0 1.1*f_l]);
+%title('\bf{Initial Condition}');
+%drawnow
 
 tic;
 
