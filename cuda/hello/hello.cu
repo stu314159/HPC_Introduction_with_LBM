@@ -62,6 +62,7 @@ int main(int argc, char* argv[]){
   cudaFree(a_d);
   cudaFree(b_d);
   cudaFree(c_d);
+  // be a good leader and free your memory!
   delete [] a;
   delete [] b;
   delete [] c;
