@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
     b[i] = i;
   }
 
-  // declare device arrays
+  // declare stupid device arrays
   float * a_d;
   float * b_d;
   float * c_d;
