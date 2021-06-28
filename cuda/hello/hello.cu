@@ -4,7 +4,7 @@
 #include <cuda.h>
 
 __global__ void vec_add(float* c, const float * a, const float * b, const int N){
-
+  
   int tid = threadIdx.x + blockIdx.x*blockDim.x; //assume 1D thread grid
   if(tid<N){
   c[tid] = a[tid]+b[tid];
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
     b[i] = i;
   }
 
-  // declare device arrays
+  // declare wonderful device arrays
   float * a_d;
   float * b_d;
   float * c_d;
