@@ -30,7 +30,7 @@ load_restart = 0;
 save_restart = 1;
 
 % Turbulence Model Parameter
-Cs = 0.5;
+Cs = 0.05;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
