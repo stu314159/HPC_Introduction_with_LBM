@@ -40,7 +40,7 @@ lattice_selection = 2;
 BC_type = 1;
 % Regularized
 
-dynamics = 1;
+dynamics = 1; %<-- just use LBGK for now
 % 1 = LBGK
 % 2 = RBGK
 % 3 = MRT
@@ -49,7 +49,7 @@ entropic = 0;
 % 0 = no
 % 1 = yes
 
-grate_on = 0;
+grate_on = 0;%<-- for now, grate_on = 0 
 
 
 Num_ts = 200000;
