@@ -12,7 +12,9 @@ N = 50000;
 u = 1;
 
 plot_freq = 2500;
-plot_switch = 1;
+plot_switch = 0;
+profile_switch = 0;
+
 x_left = -10;
 x_right = 10;
 x_space = linspace(x_left,x_right,N);
@@ -33,11 +35,13 @@ f((x_space < -5) & (x_space > -7)) = 1;
 
 f_tmp = zeros(N,1);
 
-% plot initial condition
-plot(x_space,f,'-b');
-axis([x_left x_right 0 1.1*f_l]);
-title('\bf{Initial Condition}');
-drawnow
+if plot_switch == 1
+    % plot initial condition
+    plot(x_space,f,'-b');
+    axis([x_left x_right 0 1.1*f_l]);
+    title('\bf{Initial Condition}');
+    drawnow
+end
 
 
 tic;
@@ -59,8 +63,10 @@ k.ThreadBlockSize = [TPB,1,1];
 k.GridSize = [ceil(N/TPB),1,1];
 N = int32(N);
 
+if profile_switch == 1
+    profile on
+end
 
-%profile on
 for ts = 1:Num_ts
     
     if(mod(ts,100)==0)
@@ -84,11 +90,18 @@ for ts = 1:Num_ts
 end
 
 ex_time = toc;
-%profile viewer
-plot(x_space,f,'-b');
-axis([x_left x_right 0 1.1*f_l]);
-title('\bf{Final Condition}');
-grid on
-drawnow
+if profile_switch == 1
+    profile viewer
+end
+
+if plot_switch == 1
+    plot(x_space,f,'-b');
+    axis([x_left x_right 0 1.1*f_l]);
+    title('\bf{Final Condition}');
+    grid on
+    drawnow
+end
+
 
 fprintf('Execution time = %g.\n Average time per DOF*update = %g. \n',ex_time, ex_time/(N*Num_ts));
+
