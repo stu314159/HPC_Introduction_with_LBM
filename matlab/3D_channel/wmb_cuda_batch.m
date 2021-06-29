@@ -30,7 +30,7 @@ load_restart = 0;
 save_restart = 1;
 
 % Turbulence Model Parameter
-Cs = 0.05;
+Cs = 0.01;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -56,15 +56,15 @@ Num_ts = 200000;
 ts_rep_freq = 1000;
 plot_freq = 50000;
 
-Re = 3e4;
+Re = 150;
 dt = 1.5e-3;
-Ny_divs = 65;
+Ny_divs = 25;
 
 Lx_p = 1;
 Ly_p = 1;
 Lz_p = 4;
 
-obst_type = 'obl_sph';
+obst_type = 'wmb';
 % 'none'
 % 'sphere'
 % 'cylinder'
