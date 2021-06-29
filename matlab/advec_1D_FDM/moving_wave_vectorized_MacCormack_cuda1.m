@@ -32,14 +32,13 @@ f_tmp = zeros(N,1);
 
 
 
-
-% plot initial condition
-plot(x_space,f,'-b');
-axis([x_left x_right 0 1.1*f_l]);
-grid on
-
-%title('\bf{Initial Condition}');
-drawnow
+if plot_switch == 1
+    % plot initial condition
+    plot(x_space,f,'-b');
+    axis([x_left x_right 0 1.1*f_l]);
+    grid on
+    drawnow
+end
 
 tic;
 
@@ -88,10 +87,12 @@ end
 
 ex_time = toc;
 
-plot(x_space,f,'-b');
-axis([x_left x_right 0 1.1*f_l]);
-title('\bf{Final Condition}');
-grid on
-drawnow
+if plot_switch == 1
+    plot(x_space,f,'-b');
+    axis([x_left x_right 0 1.1*f_l]);
+    title('\bf{Final Condition}');
+    grid on
+    drawnow
+end
 
 fprintf('Execution time = %g.\n Average time per DOF*update = %g. \n',ex_time, ex_time/(N*Num_ts));
