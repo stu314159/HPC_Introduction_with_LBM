@@ -27,11 +27,11 @@ validation_check = 0; % set to 1 if you want to compare this run of code against
 profile_code = 0;
 
 load_restart = 0;
-save_restart = 0;
+save_restart = 1;
 
 % Turbulence Model Parameter
 
-Cs = 0.05;
+Cs = 1;
 
 
 lattice_selection = 2; 
@@ -54,13 +54,13 @@ entropic = 0;
 grate_on = 0;
 
 
-Num_ts = 5000;
+Num_ts = 50000;
 ts_rep_freq = 1000;
-plot_freq = 1000;
+plot_freq = 5000;
 
-Re = 3e4;
+Re = 150;
 dt = 1.5e-3;
-Ny_divs = 55;
+Ny_divs = 45;
 
 Lx_p = 1;
 Ly_p = 1;
@@ -151,10 +151,9 @@ omega = get_BGK_Omega(nu_lbm);
 u_conv_fact = (dt/dx)*(To/Lo);
 t_conv_fact = (dt*To);
 l_conv_fact = dx*Lo;
-p_conv_fact = ((l_conv_fact/t_conv_fact)^2)*(1/3); % <--for EOS type methods...
+p_conv_fact = ((l_conv_fact/t_conv_fact)^2)*(1/3)/(l_conv_fact^3); % <--for EOS type methods...
 
-rho_lbm = rho_p;
-%rho_out = rho_lbm;
+rho_lbm = rho_p*(l_conv_fact^3);%rho_out = rho_lbm;
 
 % generate LBM lattice
 xm = 0; xp = Lx_p;

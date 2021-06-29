@@ -149,9 +149,9 @@ omega = get_BGK_Omega(nu_lbm);
 u_conv_fact = (dt/dx)*(To/Lo);
 t_conv_fact = (dt*To);
 l_conv_fact = dx*Lo;
-p_conv_fact = ((l_conv_fact/t_conv_fact)^2)*(1/3); % <--for EOS type methods...
+p_conv_fact = ((l_conv_fact/t_conv_fact)^2)*(1/3)/(l_conv_fact^3); % <--for EOS type methods...
 
-rho_lbm = rho_p;
+rho_lbm = rho_p*(l_conv_fact^3);
 %rho_out = rho_lbm;
 
 % generate LBM lattice
