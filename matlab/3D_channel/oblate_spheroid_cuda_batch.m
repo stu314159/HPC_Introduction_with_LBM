@@ -52,12 +52,12 @@ entropic = 0;
 grate_on = 0;%<-- for now, grate_on = 0 
 
 
-Num_ts = 200000;
+Num_ts = 300000;
 ts_rep_freq = 1000;
 plot_freq = 10000;
 
-Re = 5000;
-dt = 5.0e-4;
+Re = 15000;
+dt = 5e-4;
 Ny_divs = 65;
 
 Lx_p = 1;
