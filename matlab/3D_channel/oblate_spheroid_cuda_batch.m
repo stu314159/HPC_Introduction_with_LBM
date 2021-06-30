@@ -30,7 +30,7 @@ load_restart = 0;
 save_restart = 1;
 
 % Turbulence Model Parameter
-Cs = 0.05;
+Cs = 50;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -54,10 +54,10 @@ grate_on = 0;%<-- for now, grate_on = 0
 
 Num_ts = 200000;
 ts_rep_freq = 1000;
-plot_freq = 50000;
+plot_freq = 10000;
 
-Re = 3e4;
-dt = 1.5e-3;
+Re = 5000;
+dt = 5.0e-4;
 Ny_divs = 65;
 
 Lx_p = 1;
