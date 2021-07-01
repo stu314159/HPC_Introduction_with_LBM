@@ -22,7 +22,15 @@ make_gold_standard = 0;
 % sphere obstacle
 % fluid = glycol
 
+validation_check = 0; % set to 1 if you want to compare this run of code against gold standard
+
 profile_code = 0;
+
+load_restart = 0;
+save_restart = 1;
+
+% Turbulence Model Parameter
+Cs = 0.01;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -32,7 +40,7 @@ lattice_selection = 2;
 BC_type = 1;
 % Regularized
 
-dynamics = 1;
+dynamics = 1; %<-- just use LBGK for now
 % 1 = LBGK
 % 2 = RBGK
 % 3 = MRT
@@ -41,15 +49,15 @@ entropic = 0;
 % 0 = no
 % 1 = yes
 
-sim_name = 'circ_obst3D_Re5';
-ts_num=0;
+grate_on = 0;%<-- for now, grate_on = 0 
 
-Num_ts = 100000;
+
+Num_ts = 200000;
 ts_rep_freq = 1000;
-plot_freq = 5000;
+plot_freq = 50000;
 
-Re = 100;
-dt = 4e-3;
+Re = 150;
+dt = 1.5e-3;
 Ny_divs = 25;
 
 Lx_p = 1;
@@ -61,6 +69,7 @@ obst_type = 'wmb';
 % 'sphere'
 % 'cylinder'
 % 'wmb'
+% 'obl_sph'
 
 
 fluid = 2;
@@ -113,6 +122,15 @@ switch obst_type
         h = Ly_p/5;
         y_c = h/2;
         Lo = h;
+        
+    case 'obl_sph'
+        z_c = Lz_p/3;
+        x_c = Lx_p/2;
+        y_c = Ly_p/2.5;
+        a = Lx_p/4;
+        c = a/6;
+        Lo = 2*a;
+        p = -(30/180)*pi; % angle of attack
     
 end
 
@@ -170,6 +188,7 @@ switch lattice_selection
         
 end
 
+
 stm = genStreamTgtVec3Dr2(Nx,Ny,Nz,ex,ey,ez);
 
 numSpd = length(w);
@@ -219,12 +238,28 @@ switch obst_type
         
         snl = [snl;obst_list]; 
         snl = unique(snl);
+        
+    case 'obl_sph'
+
+        obl_sph_fun = @(x,y,z) ((x ).^2 + (z ).^2)./(a^2) + ...
+            ((y ).^2)./(c^2) - 1;
+        % shift coordinates to oblate spheroid center prior to rotation
+        gcoord_r = gcoord - [x_c y_c z_c];
+        rot_mat = [1 0 0; 0 cos(p) sin(p); 0 -sin(p) cos(p)];
+        gcoord_r = gcoord_r*rot_mat';
+        
+        obst_list = ...
+            find(obl_sph_fun(gcoord_r(:,1),gcoord_r(:,2),gcoord_r(:,3)) <= 0);
+        snl = [snl;obst_list];
+        snl = unique(snl);
     
 end
 
 % eliminate any intersection between inl and onl and the solid node lists
 inl = setxor(inl,intersect(inl,snl));
 onl = setxor(onl,intersect(onl,snl));
+
+
 
 % compute inl and onl velocity boundary conditions
 %Umax = (3/2)*u_lbm;
@@ -302,17 +337,29 @@ switch dynamics
         
 end
 
-
-
-% initialize to zero.
-fIn=(rho_lbm*ones(nnodes,numSpd)).*(repmat(w,nnodes,1));
-fOut = fIn; % just for initialization.
 fEq = zeros(nnodes,numSpd);
 
-rho = sum(fIn,2);
-ux = (fIn*ex')./(rho*u_conv_fact);
-uy = (fIn*ey')./(rho*u_conv_fact);
-uz = (fIn*ez')./(rho*u_conv_fact);
+if load_restart == 1
+    [ux,uy,uz,rho] =  load_restart_data();
+    for i = 1:numSpd
+        cu = 3*(ex(i)*ux+ey(i)*uy+ez(i)*uz);
+        fEq(:,i)=w(i)*rho.*(1+cu+(1/2)*(cu.*cu) - ...
+            (3/2)*(ux.^2 + uy.^2 + uz.^2));
+    end
+    fIn = fEq;
+    fOut = fIn;
+else
+    % initialize to zero.
+    fIn=(rho_lbm*ones(nnodes,numSpd)).*(repmat(w,nnodes,1));
+    fOut = fIn; % just for initialization.
+    rho = sum(fIn,2);
+    ux = (fIn*ex')./(rho*u_conv_fact);
+    uy = (fIn*ey')./(rho*u_conv_fact);
+    uz = (fIn*ez')./(rho*u_conv_fact);
+    
+end
+
+
 
 
 
@@ -330,14 +377,16 @@ fprintf('LBM viscosity = %g. \n',nu_lbm);
 fprintf('LBM relaxation parameter (omega) = %g. \n',omega);
 fprintf('LBM flow Mach number = %g. \n',u_lbm);
 
-input_string = sprintf('Do you wish to continue? [Y/n] \n');
+%input_string = sprintf('Do you wish to continue? [Y/n] \n');
 
-run_dec = input(input_string,'s');
+%run_dec = input(input_string,'s');
+
+run_dec = 'Y';
 
 if ((run_dec ~= 'n') && (run_dec ~= 'N'))
     
     fprintf('Ok! Cross your fingers!! \n');
-
+    ts_num=0; % for naming the visualization data files
 
     % do some more pre-time-stepping set-up
     tic;
@@ -373,9 +422,9 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         end
         
        if(mod(ts,2)==1)
-           D3Q19_RegBC_LBGK(fOut,fIn,SNL,INL,u_lbm,ONL,rho_out,omega,Nx,Ny,Nz);
+           D3Q19_RegBC_LBGK_turb(fOut,fIn,SNL,INL,u_lbm,ONL,rho_out,omega,Cs,Nx,Ny,Nz);
        else
-           D3Q19_RegBC_LBGK(fIn,fOut,SNL,INL,u_lbm,ONL,rho_out,omega,Nx,Ny,Nz);
+           D3Q19_RegBC_LBGK_turb(fIn,fOut,SNL,INL,u_lbm,ONL,rho_out,omega,Cs,Nx,Ny,Nz);
        end
         
         if(mod(ts,plot_freq)==0)
@@ -394,10 +443,7 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
             pressure_h = rho*p_conv_fact;
             p_offset = pressure_h(p_ref_LP);
             pressure_h = pressure_h - p_offset;
-            %vtk_suffix=sprintf('_velocityAndPressure%d.vtk',ts_num);
-            %ts_fileName=strcat(sim_name,vtk_suffix);
-            
-            
+           
             pressure_h = gather(pressure_h);
             ux_h = gather(ux_h); uy_h = gather(uy_h); uz_h = gather(uz_h);
             velmag = gather(velmag);
@@ -423,9 +469,25 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
         save('gold_standard.mat','fIn');
     end
     
+    if save_restart == 1
+        % ensure I have up-to-date data (in LBM units)
+        rho = sum(fIn,2);
+        ux = (fIn*ex')./rho;
+        uy = (fIn*ey')./rho;
+        uz = (fIn*ez')./rho;
+        ux(snl)=0; uy(snl)=0; uz(snl)=0;
+        
+        ux_h = gather(ux); uy_h = gather(uy); uz_h = gather(uz);
+        rho_h = gather(rho);
+        
+        write_restart_data(ux_h,uy_h,uz_h,rho_h,nnodes);
+    end
+    
     clear fOut fEq stm rho ux uy uz
     
-   % fprintf('Validation check, error = %g \n',validate(fIn));
+    if validation_check == 1
+        fprintf('Validation check, error = %g \n',validate(fIn));
+    end
     
     if profile_code == 1
         profile viewer
@@ -436,3 +498,5 @@ if ((run_dec ~= 'n') && (run_dec ~= 'N'))
 else
     fprintf('Run aborted.  Better luck next time!\n');
 end
+
+

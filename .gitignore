@@ -37,3 +37,5 @@ ipython_config.py
 
 # the *.mexa64 files may be incompatible depending on cuda versions and matlab installs
 *.mexa64*
+
+*.asv*

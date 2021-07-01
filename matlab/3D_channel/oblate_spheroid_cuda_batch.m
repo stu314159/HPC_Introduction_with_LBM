@@ -30,7 +30,7 @@ load_restart = 0;
 save_restart = 1;
 
 % Turbulence Model Parameter
-Cs = 0.05;
+Cs = 50;
 
 lattice_selection = 2; 
 % 1 = D3Q15 %<-- for this test, only D3Q15 available
@@ -52,12 +52,12 @@ entropic = 0;
 grate_on = 0;%<-- for now, grate_on = 0 
 
 
-Num_ts = 200000;
+Num_ts = 300000;
 ts_rep_freq = 1000;
-plot_freq = 50000;
+plot_freq = 10000;
 
-Re = 3e4;
-dt = 1.5e-3;
+Re = 15000;
+dt = 5e-4;
 Ny_divs = 65;
 
 Lx_p = 1;
@@ -149,9 +149,9 @@ omega = get_BGK_Omega(nu_lbm);
 u_conv_fact = (dt/dx)*(To/Lo);
 t_conv_fact = (dt*To);
 l_conv_fact = dx*Lo;
-p_conv_fact = ((l_conv_fact/t_conv_fact)^2)*(1/3); % <--for EOS type methods...
+p_conv_fact = ((l_conv_fact/t_conv_fact)^2)*(1/3)/(l_conv_fact^3); % <--for EOS type methods...
 
-rho_lbm = rho_p;
+rho_lbm = rho_p*(l_conv_fact^3);
 %rho_out = rho_lbm;
 
 % generate LBM lattice

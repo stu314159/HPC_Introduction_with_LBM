@@ -8,6 +8,7 @@ u = 1;
 
 plot_freq = 2500;
 plot_switch = 1;
+profile_switch = 1;
 x_left = -10;
 x_right = 10;
 x_space = linspace(x_left,x_right,N);
@@ -29,17 +30,14 @@ f((x_space < -5) & (x_space > -7)) = 1;
 f_tmp1 = zeros(N,1);
 f_tmp = zeros(N,1);
 
+if plot_switch == 1
+    % plot initial condition
+    plot(x_space,f,'-b');
+    axis([x_left x_right 0 1.1*f_l]);
+    grid on
+    drawnow
+end
 
-
-
-
-% plot initial condition
-plot(x_space,f,'-b');
-axis([x_left x_right 0 1.1*f_l]);
-grid on
-
-%title('\bf{Initial Condition}');
-drawnow
 
 tic;
 
@@ -73,10 +71,12 @@ end
 
 ex_time = toc;
 
-plot(x_space,f,'-b');
-axis([x_left x_right 0 1.1*f_l]);
-title('\bf{Final Condition}');
-grid on
-drawnow
+if plot_switch == 1
+    plot(x_space,f,'-b');
+    axis([x_left x_right 0 1.1*f_l]);
+    title('\bf{Final Condition}');
+    grid on
+    drawnow
+end
 
 fprintf('Execution time = %g.\n Average time per DOF*update = %g. \n',ex_time, ex_time/(N*Num_ts));

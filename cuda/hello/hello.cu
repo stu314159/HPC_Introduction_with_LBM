@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
   cudaMemcpy(b_d,b,N*sizeof(float),cudaMemcpyHostToDevice);
 
   // invoke calculation on the GPU
- const int BLOCK_SIZE=128;
+  const int BLOCK_SIZE=128;
   dim3 BLOCKS(BLOCK_SIZE,1,1);
   dim3 GRIDS((N+BLOCK_SIZE-1)/BLOCK_SIZE,1,1);
   vec_add<<<GRIDS,BLOCKS>>>(c_d,a_d,b_d,N);
