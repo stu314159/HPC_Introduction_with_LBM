@@ -182,5 +182,5 @@ def ldc2D(Re=100,N=101, Num_ts = 50000, omega = 1.8, visTs=10000):
     plt.tight_layout()
     plt.show()
 
-ldc2D(100,101,20000,1.8,10000)
+ldc2D(1000,101,20000,1.8,10000)
 #ldc2D(10,4,1)
