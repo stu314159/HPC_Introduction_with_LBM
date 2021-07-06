@@ -75,11 +75,11 @@ class Partition:
 def partitionfunc(n,k,l=1):
     '''n is the integer to partition, k is the length of partitions, l is the min partition element size'''
     if k < 1:
-        raise StopIteration
+        return
     if k == 1:
         if n >= l:
             yield (n,)
-        raise StopIteration
+        return
     for i in range(l,n+1):
         for result in partitionfunc(n-i,k-1,i):
             yield (i,)+result
@@ -144,6 +144,7 @@ def part_advisor(Nx,Ny,Nz,num_procs, numTrials = 2000):
                 sample_partition = Partition(Nx,Ny,Nz,r_part)
                 sample_score = sample_partition.get_score()
                 if sample_score < bestScore:
+                    bestScore = sample_score
                     bestPartition = Partition(Nx,Ny,Nz,r_part)
             
     

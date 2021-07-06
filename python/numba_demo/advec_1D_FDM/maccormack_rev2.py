@@ -28,14 +28,18 @@ dt = 0.6*dx/u;
 nu = u*dx/dt;
 
 @cuda.jit()
-def mac_update(f_in,f_tmp):
-    f_tmp1 = f_in - (u*dt/dx)*(f_in[x_p]-f_in)
-    f_tmp = 0.5*(f_in + f_tmp1 - (u*dt/dx)*(f_tmp1 - f_tmp1[x_m]));
+def mac_update(fOut,fIn):
+    i = cuda.grid(1);
+    
+    if i<len(fIn):
+        f_tmp1 = fIn - (u*dt/dx)*(fIn[x_p]-fIn)
+        fOut = 0.5*(fIn + f_tmp1 - (u*dt/dx)*(f_tmp1 - f_tmp1[x_m]));
     
 
 f_l = 1.;
 f = f_l*np.exp(-(x_space**2));
 f[(x_space < -5) & (x_space > -7)] = 1 
+f_tmp = np.zeros_like(f);
 
 
 # plot the initial condition
@@ -50,13 +54,15 @@ ind = np.arange(N)
 x_m = np.roll(ind,1)
 x_p = np.roll(ind,-1)
 
-
+threads = 256;
+blocks = (N//threads) + 1
 
 for ts in range(Num_ts):
     if(ts%1000 == 0):
         print(f'{"Executing time step %d"}'%ts)
     
-    f = mac_update(f);
+    mac_update[blocks,threads](f_tmp,f);
+    f = f_tmp;
     
     if(plot_switch == 1):
         if(ts%plot_freq == 0):

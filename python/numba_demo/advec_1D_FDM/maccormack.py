@@ -15,7 +15,7 @@ N = 50000
 u = 1
 
 plot_freq = 2500
-plot_switch = 1
+plot_switch = 0
 
 x_left = -10;
 x_right = 10;
@@ -44,7 +44,7 @@ x_m = np.roll(ind,1)
 x_p = np.roll(ind,-1)
 
 for ts in range(Num_ts):
-    if(ts%100 == 0):
+    if(ts%1000 == 0):
         print(f'{"Executing time step %d"}'%ts)
     
     f_tmp1 = f - (u*dt/dx)*(f[x_p]-f);
