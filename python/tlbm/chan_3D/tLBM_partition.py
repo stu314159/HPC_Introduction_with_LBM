@@ -78,8 +78,8 @@ print("creating %s partition for %d processes" % (partition_style, numProcs))
 lat.set_Partition(numParts= numProcs, style = partition_style)
 lat.compute_cutSize()
 print("cut size for %s partition = %g" % (partition_style, lat.get_cutSize()))
-#print "writing vtk file for %s partition" % partition_style
-#partition_vtk_filename = "partition_%s.vtk" % partition_style
-#lat.partition.write_vtk(partition_vtk_filename)
+print("writing vtk file for %s partition" % partition_style)
+partition_vtk_filename = "partition_%s.vtk" % partition_style
+lat.partition.write_vtk(partition_vtk_filename)
 print("writing %s partition to disk" % partition_style)
 lat.partition.write_partition()
