@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#PBS -A USNAM37752431
+#PBS -q standard
+#PBS -l select=1:ncpus=10:mpiprocs=10
+#PBS -l walltime=00:01:00
+#PBS -N test
+#PBS -j oe
+#PBS -S /bin/bash
+
+cd $WORKDIR
+
+JOBID=`echo $PBS_JOBID | cut -d '.' -f 1`
+if [ ! -d $JOBID ]; then
+  mkdir -p $JOBID
+fi
+
+cd $JOBID
+
+cp $PBS_O_WORKDIR/hello .
+
+aprun -n 10 ./hello
