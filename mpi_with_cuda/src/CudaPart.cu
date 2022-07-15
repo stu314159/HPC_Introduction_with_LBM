@@ -1,6 +1,7 @@
 #include "CudaPart.h"
 #include <cuda.h>
 #include <cstdio>
+#include <mpi.h>
 
 __global__ void increment(float * d, const int N);
 
@@ -15,8 +16,8 @@ __global__ void increment(float * d, const int N)
 }
 
 
-CudaPart::CudaPart(int numEle, int rank, int size):
-	numEle(numEle), rank(rank), size(size)
+CudaPart::CudaPart(int numEle, int rank, int size, MPI_Comm c):
+	numEle(numEle), rank(rank), size(size), comm(c)
 {
   initialize();
 }

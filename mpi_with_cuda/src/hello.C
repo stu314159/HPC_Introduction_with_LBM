@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 	if (rank < (N%size))
 		n++; 
 
-	CudaPart myPart = CudaPart(n,rank,size);
+	CudaPart myPart = CudaPart(n,rank,size, MPI_COMM_WORLD);
 
 	printf("Process %d gets %d elements.\n",rank,n);
 
